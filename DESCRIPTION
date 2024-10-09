@@ -1,0 +1,14 @@
+Package: synthReact
+Title: Creates synthetic data based on real Imperial REACT-1 study data
+Version: 0.0.0.9000
+Authors@R: 
+    person("Matthew", "Whitaker", , "mw418@ic.ac.uk", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0003-1363-6537"))
+Description: Creates synthetic data based on real Imperial REACT-1 study data.
+License: `use_mit_license()`
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports:
+    MASS,
+    stats
