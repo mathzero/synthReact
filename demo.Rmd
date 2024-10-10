@@ -1,0 +1,209 @@
+---
+title: "synthReact Package Demo"
+author: "Matthew Whitaker"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  github_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.path = "figures/",
+  fig.cap = TRUE
+)
+```
+
+
+# Overview
+
+This document demonstrates the usage of the `synthReact` R package, which generates synthetic datasets based on the REACT-1 study parameters. The package allows users to create realistic synthetic data for analysis and modeling while preserving data privacy.
+
+# Installation
+
+```{r installation, eval=FALSE}
+# Install devtools if not already installed
+install.packages("devtools")
+
+# Install synthReact from GitHub
+devtools::install_github("mathzero/synthReact")
+```
+
+
+# Loading the Package
+
+```{r load_package}
+# Load the synthReact package
+library(synthReact)
+```
+
+# Generating Synthetic Data
+
+Generate a synthetic dataset with 1,000 samples:
+
+```{r generate_data}
+# Set seed for reproducibility
+seed_value <- 123
+
+# Generate synthetic data
+n_samples <- 10000
+synthetic_data <- generate_synthetic_data(n_samples = n_samples, seed = seed_value)
+
+# View the first few rows
+head(synthetic_data)
+```
+
+# Data Exploration and Visualization
+
+## Histogram of Age
+
+```{r histogram_age, fig.cap="Histogram of Age"}
+library(ggplot2)
+
+ggplot(synthetic_data, aes(x = age)) +
+  geom_histogram(binwidth = 5, fill = "blue", color = "black") +
+  labs(x = "Age", y = "Count") +
+  theme_minimal()
+```
+
+## Boxplot of BMI by Gender
+
+```{r boxplot_bmi_gender, fig.cap="BMI by Gender"}
+ggplot(synthetic_data, aes(x = gender, y = bmi)) +
+  geom_boxplot(fill = "orange", color = "black") +
+  labs(x = "Gender", y = "BMI") +
+  theme_minimal()
+```
+
+## Bar Plot of Smoking Status
+
+```{r barplot_smoking_status, fig.cap="Smoking Status Distribution"}
+ggplot(synthetic_data, aes(x = smokeever_cat)) +
+  geom_bar(fill = "green", color = "black") +
+  labs(x = "Smoking Status", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+## Correlation Matrix of Continuous Variables
+
+```{r correlation_matrix, fig.cap="Correlation Matrix of Continuous Variables"}
+library(corrplot)
+library(dplyr)
+
+# Select continuous variables
+continuous_vars <- synthetic_data %>%
+  select(age, bmi, imd_decile, num_comorbidities)
+
+# Compute correlation matrix
+cor_matrix <- cor(continuous_vars)
+
+# Visualize the correlation matrix
+corrplot(cor_matrix, method = "color", type = "upper",
+         tl.col = "black", tl.srt = 45,
+         addCoef.col = "black", number.cex = 0.7,
+         mar = c(0, 0, 1, 0))
+```
+
+# Modeling Outcomes
+
+## Logistic Regression Model for PCR Test Result
+
+```{r model_pcr_test_result}
+
+# Convert outcome to factor
+# synthetic_data$pcr_test_result <- factor(synthetic_data$pcr_test_result, levels = c(0, 1))
+
+# Fit the model
+model_pcr_test_result <- glm(as.formula("pcr_test_result ~ age + symptom_loss_smell+symptom_loss_taste+
+                               symptom_cough + symptom_fever + covid_before+vaccinated"),
+                             data = synthetic_data, family = binomial)
+
+# Summary of the model
+summary(model_pcr_test_result)
+```
+
+## Odds Ratios and Confidence Intervals
+
+```{r odds_ratios_pcr_test_result}
+# Odds ratios and confidence intervals
+exp(cbind(OddsRatio = coef(model_pcr_test_result), confint(model_pcr_test_result)))
+```
+
+## Logistic Regression Model for Long COVID
+
+```{r model_longcovid}
+# Convert outcome to factor
+synthetic_data$longcovid <- factor(synthetic_data$longcovid, levels = c(0, 1))
+
+# Fit the model
+model_longcovid <- glm(longcovid ~ age + gender + bmi + smokeever_cat + num_comorbidities,
+                       data = synthetic_data, family = binomial)
+
+# Summary of the model
+summary(model_longcovid)
+```
+
+## Odds Ratios and Confidence Intervals
+
+```{r odds_ratios_longcovid}
+# Odds ratios and confidence intervals
+exp(cbind(OddsRatio = coef(model_longcovid), confint(model_longcovid)))
+```
+
+# ROC Curve Analysis
+
+## Predicted Probabilities and ROC Curve for PCR Test Result
+
+```{r roc_curve_pcr_test_result, fig.cap="ROC Curve for PCR Test Result"}
+library(pROC)
+
+# Predicted probabilities for PCR Test Result
+synthetic_data$predicted_prob_pcr <- predict(model_pcr_test_result, type = "response")
+
+# ROC Curve for PCR Test Result
+roc_pcr_test <- roc(as.numeric(synthetic_data$pcr_test_result), synthetic_data$predicted_prob_pcr)
+
+# Plot ROC Curve
+plot(roc_pcr_test, col = "red", main = "ROC Curve for PCR Test Result")
+
+```
+
+## AUC Value
+
+```{r auc_value_pcr_test_result}
+# AUC Value
+auc_value_pcr <- auc(roc_pcr_test)
+print(paste("AUC for PCR Test Result:", round(auc_value_pcr, 3)))
+```
+
+# Conclusion
+
+This demo showcases how to generate and analyze synthetic data using the `synthReact` package. The synthetic data preserves the statistical properties of the original REACT-1 study data, allowing for meaningful analysis while ensuring data privacy.
+
+---
+
+# Additional Notes
+
+- **Plots**: The images included in this document are generated when you knit the R Markdown file. Ensure that you have the necessary packages installed.
+
+- **Package Dependencies**: Make sure to install all required packages before running the script:
+
+  ```{r install_packages, eval=FALSE}
+  install.packages(c("ggplot2", "dplyr", "pROC", "corrplot"))
+  ```
+
+- **Data Privacy**: The synthetic data generated does not contain any real participant information from the REACT-1 study, maintaining confidentiality.
+
+# References
+
+- **synthReact GitHub Repository**: [synthReact](https://github.com/mathzero/synthReact)
+
+- **REACT-1 Study**: [Official Website](https://www.imperial.ac.uk/medicine/research-and-impact/groups/react-study/studies/the-react-1-programme/)
+
+---
