@@ -6,8 +6,7 @@
 #'
 #' @import stats
 #' @import MASS
-#' @import mvtnorm
-#' @import copula
+
 #'
 #' @param n_samples Integer. Number of samples to generate.
 #' @return A data frame containing the synthetic dataset.
