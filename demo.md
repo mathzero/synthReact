@@ -209,10 +209,6 @@ summary(model_pcr_test_result)
     ## glm(formula = as.formula("pcr_test_result ~ age + symptom_loss_smell+symptom_loss_taste+\n                               symptom_cough + symptom_fever + covid_before+vaccinated"), 
     ##     family = binomial, data = synthetic_data)
     ## 
-    ## Deviance Residuals: 
-    ##     Min       1Q   Median       3Q      Max  
-    ## -1.5210  -0.3942  -0.2025  -0.1988   2.9838  
-    ## 
     ## Coefficients:
     ##                       Estimate Std. Error z value Pr(>|z|)    
     ## (Intercept)         -4.4492197  0.3037154 -14.649  < 2e-16 ***
@@ -269,10 +265,6 @@ summary(model_longcovid)
     ## Call:
     ## glm(formula = longcovid ~ age + gender + bmi + smokeever_cat + 
     ##     num_comorbidities, family = binomial, data = synthetic_data)
-    ## 
-    ## Deviance Residuals: 
-    ##     Min       1Q   Median       3Q      Max  
-    ## -0.4345  -0.2617  -0.2336  -0.2099   2.9280  
     ## 
     ## Coefficients:
     ##                                       Estimate Std. Error z value Pr(>|z|)    

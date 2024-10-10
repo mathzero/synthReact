@@ -3,7 +3,7 @@
 # -------------------------------------------------------
 # Load Necessary Libraries
 # -------------------------------------------------------
-
+devtools::install()
 # Load the synthReact package
 library(synthReact)
 
