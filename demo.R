@@ -1,4 +1,4 @@
-# Demo Script for synthDataGenerator Package
+# Demo Script for synthReact Package
 
 # -------------------------------------------------------
 # Load Necessary Libraries
