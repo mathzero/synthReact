@@ -130,7 +130,7 @@ plot(roc_pcr_test, col = "red", main = "ROC Curve for PCR Test Result")
 # AUC Value
 auc_value_pcr <- auc(roc_pcr_test)
 print(paste("AUC for PCR Test Result:", round(auc_value_pcr, 3)))
-
+summary(synthetic_data)
 # -------------------------------------------------------
 # Save the Synthetic Data (Optional)
 # -------------------------------------------------------
