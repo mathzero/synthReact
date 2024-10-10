@@ -34,13 +34,16 @@ devtools::install_github("mathzero/synthReact")
 ```
 
 
-# Loading the Package
+# Loading Necessary Packages and Functions
 
-```{r load_package}
-# Load the synthReact package
+```{r load_packages}
+# Load required packages
 library(synthReact)
+library(ggplot2)
+library(dplyr)
+library(pROC)
+library(corrplot)
 ```
-
 # Generating Synthetic Data
 
 Generate a synthetic dataset with 1,000 samples:

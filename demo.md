@@ -5,16 +5,14 @@ October 10, 2024
 
 - [Overview](#overview)
 - [Installation](#installation)
-- [Loading the Package](#loading-the-package)
+- [Loading Necessary Packages and
+  Functions](#loading-necessary-packages-and-functions)
 - [Generating Synthetic Data](#generating-synthetic-data)
-- [Synthetic Data Structure](#synthetic-data-structure)
 - [Data Exploration and
   Visualization](#data-exploration-and-visualization)
   - [Histogram of Age](#histogram-of-age)
   - [Boxplot of BMI by Gender](#boxplot-of-bmi-by-gender)
   - [Bar Plot of Smoking Status](#bar-plot-of-smoking-status)
-  - [Scatter Plot of Age vs. BMI Colored by PCR Test
-    Result](#scatter-plot-of-age-vs-bmi-colored-by-pcr-test-result)
   - [Correlation Matrix of Continuous
     Variables](#correlation-matrix-of-continuous-variables)
 - [Modeling Outcomes](#modeling-outcomes)
@@ -30,8 +28,6 @@ October 10, 2024
   - [Predicted Probabilities and ROC Curve for PCR Test
     Result](#predicted-probabilities-and-roc-curve-for-pcr-test-result)
   - [AUC Value](#auc-value)
-- [Saving the Synthetic Data
-  (Optional)](#saving-the-synthetic-data-optional)
 - [Conclusion](#conclusion)
 - [Additional Notes](#additional-notes)
 - [References](#references)
@@ -53,11 +49,15 @@ install.packages("devtools")
 devtools::install_github("mathzero/synthReact")
 ```
 
-# Loading the Package
+# Loading Necessary Packages and Functions
 
 ``` r
-# Load the synthReact package
+# Load required packages
 library(synthReact)
+library(ggplot2)
+library(dplyr)
+library(pROC)
+library(corrplot)
 ```
 
 # Generating Synthetic Data
@@ -69,28 +69,48 @@ Generate a synthetic dataset with 1,000 samples:
 seed_value <- 123
 
 # Generate synthetic data
-n_samples <- 1000
+n_samples <- 10000
 synthetic_data <- generate_synthetic_data(n_samples = n_samples, seed = seed_value)
 
 # View the first few rows
 head(synthetic_data)
 ```
 
-# Synthetic Data Structure
-
-The synthetic dataset includes:
-
-- **Continuous Variables**:
-  - `age`: Integer between 5 and 100.
-  - `bmi`: Numeric, rounded to one decimal place.
-  - `imd_decile`: Integer between 1 and 10.
-  - `num_comorbidities`: Integer between 0 and 17.
-- **Categorical Variables**: Factors with levels reflecting the original
-  data.
-- **Outcome Variables**:
-  - `pcr_test_result`: Binary variable indicating the result of a PCR
-    test.
-  - `longcovid`: Binary variable indicating the presence of Long COVID.
+    ##   age  bmi imd_decile num_comorbidities gender ethnic_new_char
+    ## 1  32 23.6          2                 0      2           White
+    ## 2  80 33.3          5                 0      2           White
+    ## 3  44 20.2          4                 1      1           White
+    ## 4  89 35.4         10                 2      1           White
+    ## 5  94 32.4          9                 1      1           White
+    ## 6   9 27.7          9                 0      2           White
+    ##              smokeever_cat                   region
+    ## 1  Former cigarette smoker               South West
+    ## 2  Former cigarette smoker               South East
+    ## 3   Never cigarette smoker Yorkshire and The Humber
+    ## 4 Current cigarette smoker               South East
+    ## 5   Never cigarette smoker                   London
+    ## 6   Never cigarette smoker            East Midlands
+    ##   work1_healthcare_or_carehome_worker shielding covid_before vaccinated
+    ## 1                                  No        No          Yes        Yes
+    ## 2                                  No        No          Yes        Yes
+    ## 3                                 Yes        No           No        Yes
+    ## 4                                  No        No           No        Yes
+    ## 5                                  No        No           No        Yes
+    ## 6                                 Yes        No           No        Yes
+    ##   symptom_loss_smell symptom_loss_taste symptom_cough symptom_fever
+    ## 1                  0                  0             0             0
+    ## 2                  0                  0             0             0
+    ## 3                  0                  0             0             0
+    ## 4                  0                  0             0             0
+    ## 5                  0                  0             1             0
+    ## 6                  0                  0             0             0
+    ##   pcr_test_result longcovid
+    ## 1               0         0
+    ## 2               0         0
+    ## 3               0         0
+    ## 4               0         0
+    ## 5               0         0
+    ## 6               0         0
 
 # Data Exploration and Visualization
 
@@ -101,12 +121,12 @@ library(ggplot2)
 
 ggplot(synthetic_data, aes(x = age)) +
   geom_histogram(binwidth = 5, fill = "blue", color = "black") +
-  labs(title = "Histogram of Age", x = "Age", y = "Count") +
+  labs(x = "Age", y = "Count") +
   theme_minimal()
 ```
 
 <figure>
-<img src="plots/histogram_age.png" alt="Histogram of Age" />
+<img src="figures/histogram_age-1.png" alt="Histogram of Age" />
 <figcaption aria-hidden="true">Histogram of Age</figcaption>
 </figure>
 
@@ -115,12 +135,12 @@ ggplot(synthetic_data, aes(x = age)) +
 ``` r
 ggplot(synthetic_data, aes(x = gender, y = bmi)) +
   geom_boxplot(fill = "orange", color = "black") +
-  labs(title = "BMI by Gender", x = "Gender", y = "BMI") +
+  labs(x = "Gender", y = "BMI") +
   theme_minimal()
 ```
 
 <figure>
-<img src="plots/boxplot_bmi_gender.png" alt="BMI by Gender" />
+<img src="figures/boxplot_bmi_gender-1.png" alt="BMI by Gender" />
 <figcaption aria-hidden="true">BMI by Gender</figcaption>
 </figure>
 
@@ -129,31 +149,15 @@ ggplot(synthetic_data, aes(x = gender, y = bmi)) +
 ``` r
 ggplot(synthetic_data, aes(x = smokeever_cat)) +
   geom_bar(fill = "green", color = "black") +
-  labs(title = "Smoking Status Distribution", x = "Smoking Status", y = "Count") +
+  labs(x = "Smoking Status", y = "Count") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 <figure>
-<img src="plots/barplot_smoking_status.png"
+<img src="figures/barplot_smoking_status-1.png"
 alt="Smoking Status Distribution" />
 <figcaption aria-hidden="true">Smoking Status Distribution</figcaption>
-</figure>
-
-## Scatter Plot of Age vs. BMI Colored by PCR Test Result
-
-``` r
-ggplot(synthetic_data, aes(x = age, y = bmi, color = as.factor(pcr_test_result))) +
-  geom_point(alpha = 0.7) +
-  labs(title = "Age vs. BMI Colored by PCR Test Result", x = "Age", y = "BMI", color = "PCR Test Result") +
-  theme_minimal()
-```
-
-<figure>
-<img src="plots/scatter_age_bmi_pcr.png"
-alt="Age vs. BMI Colored by PCR Test Result" />
-<figcaption aria-hidden="true">Age vs. BMI Colored by PCR Test
-Result</figcaption>
 </figure>
 
 ## Correlation Matrix of Continuous Variables
@@ -173,12 +177,11 @@ cor_matrix <- cor(continuous_vars)
 corrplot(cor_matrix, method = "color", type = "upper",
          tl.col = "black", tl.srt = 45,
          addCoef.col = "black", number.cex = 0.7,
-         title = "Correlation Matrix of Continuous Variables",
          mar = c(0, 0, 1, 0))
 ```
 
 <figure>
-<img src="plots/correlation_matrix.png"
+<img src="figures/correlation_matrix-1.png"
 alt="Correlation Matrix of Continuous Variables" />
 <figcaption aria-hidden="true">Correlation Matrix of Continuous
 Variables</figcaption>
@@ -190,26 +193,46 @@ Variables</figcaption>
 
 ``` r
 # Convert outcome to factor
-synthetic_data$pcr_test_result <- factor(synthetic_data$pcr_test_result, levels = c(0, 1))
+# synthetic_data$pcr_test_result <- factor(synthetic_data$pcr_test_result, levels = c(0, 1))
 
 # Fit the model
-model_pcr_test_result <- glm(pcr_test_result ~ age + gender + bmi + smokeever_cat + num_comorbidities,
+model_pcr_test_result <- glm(as.formula("pcr_test_result ~ age + symptom_loss_smell+symptom_loss_taste+
+                               symptom_cough + symptom_fever + covid_before+vaccinated"),
                              data = synthetic_data, family = binomial)
 
 # Summary of the model
 summary(model_pcr_test_result)
 ```
 
-<details>
-<summary>
-Click to expand the model summary
-</summary>
-
-``` r
-# Output of the summary(model_pcr_test_result)
-```
-
-</details>
+    ## 
+    ## Call:
+    ## glm(formula = as.formula("pcr_test_result ~ age + symptom_loss_smell+symptom_loss_taste+\n                               symptom_cough + symptom_fever + covid_before+vaccinated"), 
+    ##     family = binomial, data = synthetic_data)
+    ## 
+    ## Deviance Residuals: 
+    ##     Min       1Q   Median       3Q      Max  
+    ## -1.5210  -0.3942  -0.2025  -0.1988   2.9838  
+    ## 
+    ## Coefficients:
+    ##                       Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)         -4.4492197  0.3037154 -14.649  < 2e-16 ***
+    ## age                  0.0008619  0.0016875   0.511   0.6095    
+    ## symptom_loss_smell1 -0.0207879  0.4150352  -0.050   0.9601    
+    ## symptom_loss_taste1  1.1761245  0.2502733   4.699 2.61e-06 ***
+    ## symptom_cough1       2.0740006  0.1338679  15.493  < 2e-16 ***
+    ## symptom_fever1       2.0778673  0.1616923  12.851  < 2e-16 ***
+    ## covid_beforeYes      1.3937075  0.0975890  14.281  < 2e-16 ***
+    ## vaccinatedYes        0.5051182  0.2857013   1.768   0.0771 .  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## (Dispersion parameter for binomial family taken to be 1)
+    ## 
+    ##     Null deviance: 4225.4  on 9999  degrees of freedom
+    ## Residual deviance: 3695.8  on 9992  degrees of freedom
+    ## AIC: 3711.8
+    ## 
+    ## Number of Fisher Scoring iterations: 6
 
 ## Odds Ratios and Confidence Intervals
 
@@ -218,16 +241,15 @@ Click to expand the model summary
 exp(cbind(OddsRatio = coef(model_pcr_test_result), confint(model_pcr_test_result)))
 ```
 
-<details>
-<summary>
-Click to expand the odds ratios and confidence intervals
-</summary>
-
-``` r
-# Output of the exp(cbind(...))
-```
-
-</details>
+    ##                      OddsRatio       2.5 %      97.5 %
+    ## (Intercept)         0.01168768 0.006183413  0.02048475
+    ## age                 1.00086228 0.997556901  1.00417990
+    ## symptom_loss_smell1 0.97942671 0.396393709  2.06029869
+    ## symptom_loss_taste1 3.24178628 1.940809295  5.19620484
+    ## symptom_cough1      7.95659049 6.101106530 10.31648685
+    ## symptom_fever1      7.98741559 5.785706885 10.91539097
+    ## covid_beforeYes     4.02976283 3.334211465  4.88911899
+    ## vaccinatedYes       1.65718132 0.982538773  3.03502234
 
 ## Logistic Regression Model for Long COVID
 
@@ -243,16 +265,35 @@ model_longcovid <- glm(longcovid ~ age + gender + bmi + smokeever_cat + num_como
 summary(model_longcovid)
 ```
 
-<details>
-<summary>
-Click to expand the model summary
-</summary>
-
-``` r
-# Output of the summary(model_longcovid)
-```
-
-</details>
+    ## 
+    ## Call:
+    ## glm(formula = longcovid ~ age + gender + bmi + smokeever_cat + 
+    ##     num_comorbidities, family = binomial, data = synthetic_data)
+    ## 
+    ## Deviance Residuals: 
+    ##     Min       1Q   Median       3Q      Max  
+    ## -0.4345  -0.2617  -0.2336  -0.2099   2.9280  
+    ## 
+    ## Coefficients:
+    ##                                       Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)                          -4.395486   0.382551 -11.490  < 2e-16 ***
+    ## age                                  -0.001470   0.002239  -0.656  0.51152    
+    ## gender2                               0.211458   0.122357   1.728  0.08395 .  
+    ## bmi                                   0.028446   0.010900   2.610  0.00906 ** 
+    ## smokeever_catFormer cigarette smoker -0.074011   0.230241  -0.321  0.74787    
+    ## smokeever_catNever cigarette smoker  -0.281633   0.223237  -1.262  0.20710    
+    ## smokeever_catPrefer not to say        0.229400   0.552802   0.415  0.67816    
+    ## num_comorbidities                     0.276768   0.065376   4.234  2.3e-05 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## (Dispersion parameter for binomial family taken to be 1)
+    ## 
+    ##     Null deviance: 2646.0  on 9999  degrees of freedom
+    ## Residual deviance: 2614.5  on 9992  degrees of freedom
+    ## AIC: 2630.5
+    ## 
+    ## Number of Fisher Scoring iterations: 6
 
 ## Odds Ratios and Confidence Intervals
 
@@ -261,16 +302,15 @@ Click to expand the model summary
 exp(cbind(OddsRatio = coef(model_longcovid), confint(model_longcovid)))
 ```
 
-<details>
-<summary>
-Click to expand the odds ratios and confidence intervals
-</summary>
-
-``` r
-# Output of the exp(cbind(...))
-```
-
-</details>
+    ##                                       OddsRatio       2.5 %    97.5 %
+    ## (Intercept)                          0.01233289 0.005751073 0.0257944
+    ## age                                  0.99853131 0.994156461 1.0029253
+    ## gender2                              1.23547808 0.973902906 1.5741788
+    ## bmi                                  1.02885419 1.007128310 1.0510972
+    ## smokeever_catFormer cigarette smoker 0.92866128 0.602118007 1.4907089
+    ## smokeever_catNever cigarette smoker  0.75455021 0.496958340 1.1968697
+    ## smokeever_catPrefer not to say       1.25784494 0.362854316 3.3558374
+    ## num_comorbidities                    1.31886067 1.158871231 1.4975863
 
 # ROC Curve Analysis
 
@@ -287,11 +327,10 @@ roc_pcr_test <- roc(as.numeric(synthetic_data$pcr_test_result), synthetic_data$p
 
 # Plot ROC Curve
 plot(roc_pcr_test, col = "red", main = "ROC Curve for PCR Test Result")
-abline(a = 0, b = 1, lty = 2, col = "gray")
 ```
 
 <figure>
-<img src="plots/roc_curve_pcr.png"
+<img src="figures/roc_curve_pcr_test_result-1.png"
 alt="ROC Curve for PCR Test Result" />
 <figcaption aria-hidden="true">ROC Curve for PCR Test
 Result</figcaption>
@@ -305,18 +344,7 @@ auc_value_pcr <- auc(roc_pcr_test)
 print(paste("AUC for PCR Test Result:", round(auc_value_pcr, 3)))
 ```
 
-**Output:**
-
-    [1] "AUC for PCR Test Result: 0.624"
-
-# Saving the Synthetic Data (Optional)
-
-You can save the generated synthetic data to a CSV file for future use:
-
-``` r
-# Write the synthetic data to a CSV file
-write.csv(synthetic_data, file = "synthetic_data.csv", row.names = FALSE)
-```
+    ## [1] "AUC for PCR Test Result: 0.745"
 
 # Conclusion
 
@@ -329,9 +357,9 @@ analysis while ensuring data privacy.
 
 # Additional Notes
 
-- **Plots**: The images included in this document (e.g., histograms,
-  scatter plots) are generated when you knit the R Markdown file. Ensure
-  that you have the necessary packages installed.
+- **Plots**: The images included in this document are generated when you
+  knit the R Markdown file. Ensure that you have the necessary packages
+  installed.
 
 - **Package Dependencies**: Make sure to install all required packages
   before running the script:
@@ -346,8 +374,9 @@ analysis while ensuring data privacy.
 
 # References
 
-- **synthReact GitHub Repository**: [Link to your
-  repository](https://github.com/mathzero/synthReact)
+- **synthReact GitHub Repository**:
+  [synthReact](https://github.com/mathzero/synthReact)
+
 - **REACT-1 Study**: [Official
   Website](https://www.imperial.ac.uk/medicine/research-and-impact/groups/react-study/studies/the-react-1-programme/)
 
