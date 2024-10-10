@@ -87,7 +87,8 @@ synthetic_data$pcr_test_result <- factor(synthetic_data$pcr_test_result, levels 
 synthetic_data$longcovid <- factor(synthetic_data$longcovid, levels = c(0, 1))
 
 # Logistic Regression Model for PCR Test Result
-model_pcr_test_result <- glm(pcr_test_result ~ age + gender + bmi + smokeever_cat + num_comorbidities + vaccinated,
+model_pcr_test_result <- glm(pcr_test_result ~ age + symptom_loss_smell+symptom_loss_taste+
+                               symptom_cough + symptom_fever + covid_before+vaccinated,
                              data = synthetic_data, family = binomial)
 
 # Summary of the model

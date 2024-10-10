@@ -15,7 +15,7 @@ source(paste0(func_path,"create_subfolder.R"))
 
 #' Pull in packages needed
 package.list <- c("dplyr","MASS",
-                  "ggplot2","gdata","ggsci", "RColorBrewer", "tidyverse", "lubridate", 
+                  "ggplot2","gdata","ggsci", "RColorBrewer", "tidyverse", "lubridate",
                   "OverReact")
 load_packages(package.list)
 
@@ -32,17 +32,17 @@ healthnames=setdiff(grep("healtha",names(dfRes_1),value=T),"healtha_5")
 
 
 # engineer new covariates
-dfRes_1 <- dfRes_1 %>% 
-  rowwise() %>% 
-  mutate(num_comorbidities=sum(c_across(healthnames),na.rm=T)) %>% 
+dfRes_1 <- dfRes_1 %>%
+  rowwise() %>%
+  mutate(num_comorbidities=sum(c_across(healthnames),na.rm=T)) %>%
   ungroup()
 
 # simple mutates
-dfRes_1 <- dfRes_1  %>% 
+dfRes_1 <- dfRes_1  %>%
   mutate(num_comorbidities=case_when(healtha_18 == 1 ~ 0,
                                      is.na(num_comorbidities) ~ 0,
                                      T ~ num_comorbidities),
-    symptom_loss_smell=case_when(symptnowaw_1==1 ~1,
+         symptom_loss_smell=case_when(symptnowaw_1==1 ~1,
                                       T ~ 0),
          symptom_loss_taste=case_when(symptnowaw_2==1 ~1,
                                       T ~ 0),
@@ -63,54 +63,119 @@ dfRes_1 <- dfRes_1  %>%
   )
 
 
+# --------------------------------------------------------------------
+# Define Covariate and Outcome Columns
+# --------------------------------------------------------------------
 
-# covariates
-covariate_cols <- c("age","gender","bmi","ethnic_new_char","imd_decile","smokeever_cat","region","num_comorbidities",
-                    "work1_healthcare_or_carehome_worker","shielding","covid_before","vaccinated",
-                    "symptom_loss_smell","symptom_loss_taste","symptom_cough","symptom_fever")
+# Covariate columns
+covariate_cols <- c(
+  "age", "gender", "bmi", "ethnic_new_char", "imd_decile", "smokeever_cat", "region", "num_comorbidities",
+  "work1_healthcare_or_carehome_worker", "shielding", "covid_before", "vaccinated",
+  "symptom_loss_smell", "symptom_loss_taste", "symptom_cough", "symptom_fever"
+)
 
-outcome_cols <- c("pcr_test_result","longcovid")
+# Outcome columns
+outcome_cols <- c("pcr_test_result", "longcovid")
 
-# filter to just these vars
-dfRes_1 <- dfRes_1[,c(covariate_cols,outcome_cols)]
+# --------------------------------------------------------------------
+# Prepare the Data
+# --------------------------------------------------------------------
 
-# complete cases only
-dfRes_1 <- dfRes_1[complete.cases(dfRes_1),]
+# Filter to just the covariate and outcome columns
+dfRes_1 <- dfRes_1[, c(covariate_cols, outcome_cols)]
 
-# continuous / categorical
-cont_vars=c("age","bmi","imd_decile","num_comorbidities")
-cat_vars=setdiff(covariate_cols,cont_vars)
+# Keep complete cases only
+dfRes_1 <- dfRes_1[complete.cases(dfRes_1), ]
 
-# get means
-means_cont=colMeans(dfRes_1[,cont_vars])
-cov_matrix=cov(dfRes_1[,cont_vars])
+# Identify continuous and categorical variables
+cont_vars <- c("age", "bmi", "imd_decile", "num_comorbidities")
+cat_vars <- setdiff(covariate_cols, cont_vars)
 
-# cat probabilities
+# --------------------------------------------------------------------
+# Generate Category Probabilities for Categorical Variables
+# --------------------------------------------------------------------
+
 category_probabilities <- list()
-for(var in cat_vars){
+for (var in cat_vars) {
   dfRes_1[[var]] <- as.factor(dfRes_1[[var]])
   probs <- prop.table(table(dfRes_1[[var]]))
   category_probabilities[[var]] <- as.data.frame(probs)
 }
 
-dfRes_1$pcr_test_result
+# Save levels of categorical variables
+levels_categorical <- lapply(dfRes_1[, cat_vars], levels)
 
-# Models to generate outcomes ---------------------------------------------
+# --------------------------------------------------------------------
+# Models to Generate Continuous Variables Conditional on Age
+# --------------------------------------------------------------------
 
-# fit models
-mod_1 <- glm(as.formula("pcr_test_result ~ ."),data=dfRes_1[c(covariate_cols,"pcr_test_result")], family="binomial")
-mod_2 <- glm(as.formula("longcovid ~ ."),data=dfRes_1[c(covariate_cols,"longcovid")], family="binomial")
+# Fit regression models for continuous variables conditional on age
 
-# get coefs
-coefs_1=coef(mod_1)
-coefs_2=coef(mod_2)
+# 1. BMI Model
+model_bmi <- lm(bmi ~ age, data = dfRes_1)
+coefficients_bmi <- coef(model_bmi)
+sd_resid_bmi <- sd(residuals(model_bmi))
 
-export_params=list(means_continuous=means_cont,
-                   cov_matrix=cov_matrix,
-                   category_probabilities=category_probabilities,
-                   coefs_1=coefs_1,
-                   coefs_2=coefs_2,
-                   levels_categorical=lapply(dfRes_1[,cat_vars],levels))
+# 2. IMD Decile Model
+model_imd <- lm(imd_decile ~ age, data = dfRes_1)
+coefficients_imd <- coef(model_imd)
+sd_resid_imd <- sd(residuals(model_imd))
 
+# 3. Number of Comorbidities Model
+model_comorb <- lm(num_comorbidities ~ age, data = dfRes_1)
+coefficients_comorb <- coef(model_comorb)
+sd_resid_comorb <- sd(residuals(model_comorb))
 
-saveRDS(export_params,file = "exported_parameters.rds")
+# --------------------------------------------------------------------
+# Models to Generate Outcomes
+# --------------------------------------------------------------------
+
+# Fit logistic regression models for the outcomes
+
+# Model for PCR Test Result
+mod_1 <- glm(
+  pcr_test_result ~ .,
+  data = dfRes_1[c(covariate_cols, "pcr_test_result")],
+  family = "binomial"
+)
+coefs_1 <- coef(mod_1)
+
+# Model for Long COVID
+mod_2 <- glm(
+  longcovid ~ .,
+  data = dfRes_1[c(covariate_cols, "longcovid")],
+  family = "binomial"
+)
+coefs_2 <- coef(mod_2)
+
+# --------------------------------------------------------------------
+# Export Parameters
+# --------------------------------------------------------------------
+
+export_params <- list(
+  # Category probabilities for categorical variables
+  category_probabilities = category_probabilities,
+
+  # Levels of categorical variables
+  levels_categorical = levels_categorical,
+
+  # Coefficients for continuous variable models
+  coefficients_bmi = coefficients_bmi,
+  sd_resid_bmi = sd_resid_bmi,
+
+  coefficients_imd = coefficients_imd,
+  sd_resid_imd = sd_resid_imd,
+
+  coefficients_comorb = coefficients_comorb,
+  sd_resid_comorb = sd_resid_comorb,
+
+  # Coefficients for outcome models
+  coefs_1 = coefs_1,
+  coefs_2 = coefs_2
+)
+
+# --------------------------------------------------------------------
+# Save Exported Parameters to RDS File
+# --------------------------------------------------------------------
+
+saveRDS(export_params, file = "exported_parameters.rds")

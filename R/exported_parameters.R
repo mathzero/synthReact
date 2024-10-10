@@ -1,34 +1,6 @@
 
-exported_parameters=list(
-  means_continuous = c(
-    age = 51.2680309195539,
-    bmi = 26.6159679479582,
-    imd_decile = 6.23279210945627,
-    num_comorbidities = 0.696427395672843
-  ),
-  cov_matrix = structure(
-    c(
-      316.39593482398,
-      5.73643865241721,
-      8.40433971666527,
-      2.91649657336873,
-      5.73643865241721,
-      29.6926895668306,-1.30791726650696,
-      1.0804964458411,
-      8.40433971666527,
-      -1.30791726650696,
-      7.36143565920925,
-      -0.200063782305361,
-      2.91649657336873,
-      1.0804964458411,-0.200063782305361,
-      1.01886724370468
-    ),
-    dim = c(4L, 4L),
-    dimnames = list(
-      c("age", "bmi", "imd_decile", "num_comorbidities"),
-      c("age", "bmi", "imd_decile", "num_comorbidities")
-    )
-  ),
+
+exported_parameters = list(
   category_probabilities = list(
     gender = structure(
       list(
@@ -183,6 +155,48 @@ exported_parameters=list(
       row.names = c(NA, -2L)
     )
   ),
+  levels_categorical = list(
+    gender = c("1", "2"),
+    ethnic_new_char = c(
+      "White",
+      "Asian / Asian British",
+      "Black / African / Caribbean / Black British",
+      "Mixed",
+      "Other",
+      "NA"
+    ),
+    smokeever_cat = c(
+      "Current cigarette smoker",
+      "Former cigarette smoker",
+      "Never cigarette smoker",
+      "Prefer not to say"
+    ),
+    region = c(
+      "South East",
+      "North East",
+      "North West",
+      "Yorkshire and The Humber",
+      "East Midlands",
+      "West Midlands",
+      "East of England",
+      "London",
+      "South West"
+    ),
+    work1_healthcare_or_carehome_worker = c("No", "Yes"),
+    shielding = c("No", "Yes"),
+    covid_before = c("No", "Yes"),
+    vaccinated = c("No", "Yes"),
+    symptom_loss_smell = c("0", "1"),
+    symptom_loss_taste = c("0", "1"),
+    symptom_cough = c("0", "1"),
+    symptom_fever = c("0", "1")
+  ),
+  coefficients_bmi = c(`(Intercept)` = 25.6864493232514, age = 0.0181305700264722),
+  sd_resid_bmi = 5.43954820404603,
+  coefficients_imd = c(`(Intercept)` = 4.87097325836338, age = 0.026562729768765),
+  sd_resid_imd = 2.67173978044842,
+  coefficients_comorb = c(`(Intercept)` = 0.223845355124387, age = 0.00921786992930663),
+  sd_resid_comorb = 0.995983613139344,
   coefs_1 = c(
     `(Intercept)` = -4.0893183841048,
     age = 0.00372961104428701,
@@ -246,41 +260,5 @@ exported_parameters=list(
     symptom_loss_taste1 = 0.421969583713704,
     symptom_cough1 = -0.334694752494425,
     symptom_fever1 = -0.42686934513619
-  ),
-  levels_categorical = list(
-    gender = c("1", "2"),
-    ethnic_new_char = c(
-      "White",
-      "Asian / Asian British",
-      "Black / African / Caribbean / Black British",
-      "Mixed",
-      "Other",
-      "NA"
-    ),
-    smokeever_cat = c(
-      "Current cigarette smoker",
-      "Former cigarette smoker",
-      "Never cigarette smoker",
-      "Prefer not to say"
-    ),
-    region = c(
-      "South East",
-      "North East",
-      "North West",
-      "Yorkshire and The Humber",
-      "East Midlands",
-      "West Midlands",
-      "East of England",
-      "London",
-      "South West"
-    ),
-    work1_healthcare_or_carehome_worker = c("No", "Yes"),
-    shielding = c("No", "Yes"),
-    covid_before = c("No", "Yes"),
-    vaccinated = c("No", "Yes"),
-    symptom_loss_smell = c("0", "1"),
-    symptom_loss_taste = c("0", "1"),
-    symptom_cough = c("0", "1"),
-    symptom_fever = c("0", "1")
   )
 )
