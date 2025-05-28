@@ -74,6 +74,7 @@ The synthetic dataset includes:
     -   `imd_decile`: Integer between 1 (most deprived) and 10 (least deprived).
     -   `num_comorbidities`: Integer between 0 and 17.
 -   **Categorical Variables**:
+    -   `gender`: Factor; 1/2 (2 = female, 1 = male)
     -   `smokeever_cat`: Factor; current/former/never/PNA
     -   `region`: Factor; 9 English regions
     -   `work1_healthcare_or_carehome_worker`: Factor; yes/no
